@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predicting and Ranking Declining Content Pages — Research Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF9F4;
+    --paper-raised:#F3EFE6;
+    --ink:#1B2A4A;
+    --ink-soft:#4A5670;
+    --rule:#DAD3C2;
+    --sage:#3D6B66;
+    --sage-soft:#E4EDEB;
+    --amber:#A9772F;
+    --amber-soft:#F3E7D2;
+    --rose:#9E4B3F;
+    --rose-soft:#F5E2DD;
+    --max-w:760px;
+  }
+
+  *{box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:var(--sage); text-decoration-color:var(--sage-soft); text-underline-offset:3px;}
+  a:hover{color:var(--ink);}
+
+  ::selection{background:var(--amber-soft);}
+
+  @media (prefers-reduced-motion: no-preference){
+    .fade-up{ animation: fadeUp .6s ease both; }
+  }
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  /* ---------- MASTHEAD ---------- */
+  header.masthead{
+    border-bottom:1px solid var(--rule);
+    padding:64px 24px 48px;
+  }
+  .masthead-inner{
+    max-width:var(--max-w);
+    margin:0 auto;
+  }
+  .kicker{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--sage);
+    margin:0 0 22px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .kicker::before{
+    content:"";
+    width:26px; height:1px;
+    background:var(--sage);
+    display:inline-block;
+  }
+  h1.title{
+    font-family:'Newsreader', serif;
+    font-weight:600;
+    font-size:clamp(34px, 5.4vw, 50px);
+    line-height:1.12;
+    letter-spacing:-0.01em;
+    margin:0 0 20px;
+  }
+  .dek{
+    font-family:'Newsreader', serif;
+    font-style:italic;
+    font-size:20px;
+    color:var(--ink-soft);
+    max-width:62ch;
+    margin:0 0 30px;
+  }
+  .byline-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 22px;
+    font-size:14px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--rule);
+    padding-top:20px;
+  }
+  .byline-row strong{color:var(--ink); font-weight:600;}
+
+  /* ---------- LAYOUT ---------- */
+  main{
+    max-width:var(--max-w);
+    margin:0 auto;
+    padding:0 24px 40px;
+  }
+
+  section.block{
+    padding:56px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  section.block:last-of-type{border-bottom:none;}
+
+  .eyebrow{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .eyebrow .num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--amber);
+    background:var(--amber-soft);
+    padding:3px 8px;
+    border-radius:3px;
+    flex:none;
+  }
+  .eyebrow h2{
+    font-family:'Newsreader', serif;
+    font-weight:600;
+    font-size:27px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+
+  p{margin:0 0 18px;}
+  ul,ol{margin:0 0 18px; padding-left:22px;}
+  li{margin-bottom:8px;}
+
+  strong.term{color:var(--ink); font-weight:600;}
+
+  /* Abstract card */
+  .abstract-card{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:30px 32px;
+  }
+  .abstract-card p{
+    font-family:'Newsreader', serif;
+    font-size:18px;
+    line-height:1.7;
+    color:var(--ink);
+    margin-bottom:0;
+  }
+
+  /* Correction receipt — signature element */
+  .receipt{
+    margin:26px 0;
+    border:1px solid var(--rose);
+    border-radius:6px;
+    overflow:hidden;
+    background:#fff;
+  }
+  .receipt-head{
+    background:var(--rose-soft);
+    color:var(--rose);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:10px 18px;
+    border-bottom:1px dashed var(--rose);
+  }
+  .receipt-body{padding:20px 22px 22px;}
+  .receipt-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    margin-bottom:6px;
+  }
+  .receipt-row .was{color:#9a9284; text-decoration:line-through;}
+  .receipt-row .arrow{color:var(--rose);}
+  .receipt-row .now{color:var(--sage); font-weight:600;}
+  .receipt-note{
+    font-size:15px;
+    color:var(--ink-soft);
+    margin-top:12px;
+    margin-bottom:0;
+  }
+
+  /* Metric strip */
+  .metric-strip{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin:24px 0 8px;
+  }
+  .metric{
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:16px 14px;
+    background:#fff;
+  }
+  .metric .val{
+    font-family:'JetBrains Mono', monospace;
+    font-size:26px;
+    font-weight:600;
+    color:var(--ink);
+    line-height:1;
+  }
+  .metric .lbl{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    line-height:1.4;
+  }
+  @media (max-width:560px){
+    .metric-strip{grid-template-columns:1fr 1fr;}
+  }
+
+  /* bar chart (inline svg wrapper) */
+  .chart-card{
+    border:1px solid var(--rule);
+    border-radius:6px;
+    background:#fff;
+    padding:24px 24px 14px;
+    margin:22px 0;
+  }
+  .chart-title{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .chart-caption{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+
+  /* Table */
+  table.data-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:22px 0;
+    font-size:15px;
+  }
+  table.data-table th, table.data-table td{
+    text-align:left;
+    padding:10px 14px;
+    border-bottom:1px solid var(--rule);
+  }
+  table.data-table th{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  table.data-table td.num{font-family:'JetBrains Mono', monospace;}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tr.hl td{background:var(--sage-soft); font-weight:600;}
+
+  /* Callouts */
+  .callout{
+    border-left:3px solid var(--amber);
+    background:var(--amber-soft);
+    border-radius:0 6px 6px 0;
+    padding:16px 20px;
+    margin:20px 0;
+    font-size:15.5px;
+  }
+  .callout.no-go{
+    border-left-color:var(--rose);
+    background:var(--rose-soft);
+  }
+  .callout-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:8px;
+    display:block;
+  }
+  .callout.no-go .callout-label{color:var(--rose);}
+
+  /* Action map */
+  .action-map{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin:20px 0;
+  }
+  .action-row{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:14px;
+    background:#fff;
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:13px 16px;
+    font-size:14.5px;
+  }
+  .action-row .code{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--ink);
+    font-size:13.5px;
+  }
+  .action-row .arrow2{color:var(--rule); text-align:center;}
+  .action-row .act{
+    color:var(--sage);
+    font-weight:600;
+    text-align:right;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13.5px;
+  }
+  @media (max-width:560px){
+    .action-row{grid-template-columns:1fr; text-align:left;}
+    .action-row .act, .action-row .arrow2{text-align:left;}
+  }
+
+  /* footer / acknowledgments */
+  footer{
+    max-width:var(--max-w);
+    margin:0 auto;
+    padding:8px 24px 80px;
+    font-size:14.5px;
+    color:var(--ink-soft);
+  }
+  .cred-box{
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:22px 24px;
+    background:var(--paper-raised);
+  }
+  .cred-box a{font-weight:600;}
+
+  code, .mono{font-family:'JetBrains Mono', monospace; font-size:.92em;}
+
+  .repo-block{
+    background:var(--ink);
+    color:#EAE6DA;
+    border-radius:6px;
+    padding:16px 18px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    overflow-x:auto;
+    margin:18px 0;
+  }
+  .repo-block a{color:#B9D8CF;}
+
+  @media print{
+    header.masthead{padding-top:20px;}
+    .chart-card, .receipt, .callout{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner fade-up">
+    <p class="kicker">FlyRank ML Internship &middot; Research Paper</p>
+    <h1 class="title">Predicting and Ranking Declining Content Pages</h1>
+    <p class="dek">A decision-support system for prioritizing which web pages a content team should review first — built, tested, and honestly corrected.</p>
+    <div class="byline-row">
+      <span><strong>Dataset</strong> FlyRank ML Internship warehouse (79M rows) + starter sample (30K rows)</span>
+      <span><strong>Method</strong> Hand-written baseline vs. Random Forest</span>
+      <span><strong>Status</strong> Decision-support, non-production</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ABSTRACT -->
+  <section class="block fade-up" id="abstract">
+    <div class="eyebrow"><span class="num">00</span><h2>Abstract</h2></div>
+    <div class="abstract-card">
+      <p>
+        This paper presents a method for identifying and ranking web pages at risk of declining search performance, intended to support content teams who don't have time to review every page individually.
+        The method compares a simple hand-written scoring rule against a trained AI model, evaluated fairly on data from clients the model had never seen, with a follow-up audit to catch and remove any unintended shortcuts.
+        That audit revealed the AI model's initial results (a 56% jump over baseline) had been partly inflated; once corrected, the model still outperformed the baseline, but by a smaller, more defensible margin of about 12%.
+        This work is observational and decision-support only &mdash; it identifies pages worth reviewing, but does not prove that acting on them will cause performance to improve.
+        The result is a ranked action playbook with clear reasons for each flagged page, explicit rules for human review, and firm limits on what should never be automated.
+      </p>
+    </div>
+  </section>
+
+  <!-- 1. QUESTION -->
+  <section class="block fade-up" id="question">
+    <div class="eyebrow"><span class="num">01</span><h2>Introduction &amp; Problem Statement</h2></div>
+    <p><strong class="term">Research question:</strong> to predict which pages are not performing well, and arrange them in order from worst performance first to best.</p>
+    <p><strong class="term">Decision this supports:</strong> an SEO/content manager who oversees a client's website and can't manually check every page uses this ranked list to identify the worst-performing pages first, then works on improving those pages.</p>
+    <p><strong class="term">Cost of getting it wrong:</strong> this system can fail in two directions. Flagging a fine page wastes the manager's limited review time &mdash; inconvenient, but recoverable. Missing a genuinely declining page is more serious, since the client's real traffic keeps dropping silently until someone eventually notices &mdash; directly affecting the client's business, not just the reviewer's time.</p>
+  </section>
+
+  <!-- 2. DATA -->
+  <section class="block fade-up" id="data">
+    <div class="eyebrow"><span class="num">02</span><h2>Data</h2></div>
+    <p>Two data sources were used:</p>
+    <ol>
+      <li><strong class="term">Starter dataset</strong> &mdash; <code>content_refresh_anonymized.csv</code>, 30,000 rows, shipped directly with the project.</li>
+      <li><strong class="term">Warehouse dataset</strong> &mdash; <code>FlyRank/internship-warehouse</code> on Hugging Face, ~79 million rows total (<code>fact_content_daily_performance</code> alone holds 78,835,655 rows), queried with DuckDB.</li>
+    </ol>
+
+    <div class="metric-strip">
+      <div class="metric"><div class="val">30K</div><div class="lbl">starter dataset rows</div></div>
+      <div class="metric"><div class="val">78.8M</div><div class="lbl">warehouse daily-fact rows</div></div>
+      <div class="metric"><div class="val">May '26</div><div class="lbl">date window analyzed</div></div>
+    </div>
+
+    <p><strong class="term">Why not June 2026</strong> (the newest month available)? June is the last month in this dataset &mdash; there is no later month to check what actually happened afterward. A trustworthy "did this page decline?" label requires comparing an earlier period to a later one, so June cannot be used to build reliable training labels. May was chosen instead as a safe, mid-panel month with real data both before and after it.</p>
+
+    <p><strong class="term">Exclusions:</strong> AI-referral session data (<code>sessions_ai</code> and related columns) was excluded from feature-building &mdash; only ~30,000 of 79 million rows have any AI session activity, too sparse to model reliably.</p>
+
+    <div class="callout">
+      <span class="callout-label">Public-safety note</span>
+      All identifiers are pseudonymized hash codes (<code>client_hash_id</code>, <code>content_hash_id</code>). No client names, raw URLs, domains, or private queries appear anywhere in this data or this paper.
+    </div>
+  </section>
+
+  <!-- 3. METHODOLOGY -->
+  <section class="block fade-up" id="methodology">
+    <div class="eyebrow"><span class="num">03</span><h2>Methodology</h2></div>
+
+    <p><strong class="term">Assumptions.</strong> This project assumes <code>trend_direction == "down"</code> (a currently-observed trend) is a reasonable proxy for whether a page's traffic will actually decline in the future &mdash; true future outcomes aren't directly measurable in this data. It also assumes 91+ days without an update is a meaningful staleness threshold, though this signal was only <strong>MIXED</strong> evidence: strong for well-populated buckets, less reliable at the thin, extreme end.</p>
+
+    <p><strong class="term">Label definition.</strong> <code>is_declining</code>, defined as <code>trend_direction == "down"</code> &mdash; a proxy for whether a page's traffic is currently trending downward.</p>
+
+    <p><strong class="term">Features used.</strong> <code>ctr</code>, <code>avg_position</code>, <code>days_since_last_update</code>, <code>word_count</code>. <code>impressions_90d</code> was excluded after a leakage check (below) found it likely overlapped in time with the label's own calculation window.</p>
+
+    <p><strong class="term">Baseline.</strong> A simple hand-written rule: +1 point if a page's CTR was meaningfully below the average CTR of other pages at the <em>same position tier</em>, +1 point if it hadn't been updated in 91+ days. Pages scoring 2 (both problems) were ranked highest.</p>
+
+    <p><strong class="term">Model.</strong> A Random Forest classifier &mdash; chosen because prior evidence from the starter pipeline showed it consistently outperforming simpler methods (logistic regression, decision tree) on this type of data.</p>
+
+    <p><strong class="term">Validation design.</strong> A <em>client_holdout</em> split &mdash; entire clients were placed either fully in training or fully in testing, never split between the two. This tests the model on genuinely new clients it has never seen, preventing it from memorizing client-specific quirks.</p>
+
+    <p><strong class="term">Leakage check.</strong> <code>impressions_90d</code> was tested by comparing model performance with vs. without it. See the correction below.</p>
+
+    <div class="receipt">
+      <div class="receipt-head">Correction on record &middot; Week 6 audit</div>
+      <div class="receipt-body">
+        <div class="receipt-row">
+          <span>Precision@50, with <code>impressions_90d</code>:</span>
+          <span class="was">0.780</span>
+          <span class="arrow">&rarr;</span>
+          <span class="now">0.560, without it</span>
+        </div>
+        <p class="receipt-note">Removing this single feature dropped performance by 0.220 &mdash; strong evidence it had timing overlap with the label and was inflating the original result. It was permanently removed from the final feature set.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. RESULTS -->
+  <section class="block fade-up" id="results">
+    <div class="eyebrow"><span class="num">04</span><h2>Results (vs. Baseline)</h2></div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Method</th><th>Precision@50</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Baseline (hand-written rule)</td><td class="num">0.500</td></tr>
+        <tr><td>Random Forest &mdash; before leakage audit</td><td class="num">0.780</td></tr>
+        <tr class="hl"><td>Random Forest &mdash; after leakage audit (honest)</td><td class="num">0.560</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-card">
+      <div class="chart-title">Fig. 1 — Model vs. baseline, client_holdout test set</div>
+      <svg viewBox="0 0 420 200" width="100%" height="200" role="img" aria-label="Bar chart comparing baseline and model precision at 50">
+        <line x1="40" y1="10" x2="40" y2="170" stroke="#DAD3C2" stroke-width="1"/>
+        <line x1="40" y1="170" x2="400" y2="170" stroke="#DAD3C2" stroke-width="1"/>
+        <!-- baseline bar -->
+        <rect x="90" y="70" width="70" height="100" fill="#B9B2A0" rx="3"/>
+        <text x="125" y="60" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="#1B2A4A">0.500</text>
+        <text x="125" y="188" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#4A5670">Baseline</text>
+        <!-- model bar -->
+        <rect x="240" y="58" width="70" height="112" fill="#3D6B66" rx="3"/>
+        <text x="275" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="#1B2A4A">0.560</text>
+        <text x="275" y="188" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#4A5670">Model (audited)</text>
+      </svg>
+      <p class="chart-caption">Source figure: <code>work/figures/model_vs_baseline.png</code> in the project repository.</p>
+    </div>
+
+    <p>The honest, trustworthy result is the leakage-audited model: Precision@50 = 0.560 vs. baseline's 0.500 &mdash; a modest, directional improvement of roughly <strong>1.12&times;</strong>, tested on a client_holdout split. The earlier 0.780 result is shown for transparency: it was the original finding, later found to be partly inflated by a feature overlapping the label's own calculation window.</p>
+
+    <div class="chart-card">
+      <div class="chart-title">Fig. 2 — Click-through rate by position tier (supporting evidence for the baseline's design)</div>
+      <svg viewBox="0 0 460 210" width="100%" height="210" role="img" aria-label="Bar chart of CTR by position tier">
+        <line x1="40" y1="10" x2="40" y2="175" stroke="#DAD3C2" stroke-width="1"/>
+        <line x1="40" y1="175" x2="440" y2="175" stroke="#DAD3C2" stroke-width="1"/>
+        <rect x="55"  y="35"  width="55" height="140" fill="#3D6B66" rx="3"/>
+        <rect x="130" y="80"  width="55" height="95"  fill="#5C8B85" rx="3"/>
+        <rect x="205" y="98"  width="55" height="77"  fill="#8AACA6" rx="3"/>
+        <rect x="280" y="122" width="55" height="53"  fill="#B7CBC7" rx="3"/>
+        <rect x="355" y="145" width="55" height="30"  fill="#DCE6E3" rx="3"/>
+        <text x="82"  y="27" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#1B2A4A">0.652</text>
+        <text x="157" y="72" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#1B2A4A">0.323</text>
+        <text x="232" y="90" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#1B2A4A">0.222</text>
+        <text x="307" y="114" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#1B2A4A">0.150</text>
+        <text x="382" y="137" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#1B2A4A">1.48*</text>
+        <text x="82"  y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#4A5670">page_1</text>
+        <text x="157" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#4A5670">striking</text>
+        <text x="232" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#4A5670">page_3_5</text>
+        <text x="307" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#4A5670">deep</text>
+        <text x="382" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#4A5670">top_3*</text>
+      </svg>
+      <p class="chart-caption">*The <code>top_3</code> tier's raw per-row average is a known data-quality artifact (small-sample distortion); treat it as unreliable rather than a genuine outlier. Source figure: <code>work/figures/ctr_by_position.png</code>.</p>
+    </div>
+  </section>
+
+  <!-- 5. LIMITATIONS -->
+  <section class="block fade-up" id="limitations">
+    <div class="eyebrow"><span class="num">05</span><h2>Limitations &amp; Honest Framing</h2></div>
+
+    <ol>
+      <li><strong class="term">Leakage risk.</strong> One feature (<code>impressions_90d</code>) likely overlapped in time with the label. Removing it dropped Precision@50 from 0.780 to 0.560 &mdash; part of the model's original apparent skill was not genuine.</li>
+      <li><strong class="term">Small sample sizes.</strong> Some buckets used in this analysis (e.g. a freshness tier with only 174 pages) produced unstable percentages that could easily be due to chance rather than a real pattern.</li>
+      <li><strong class="term">Data quality concerns.</strong> Many top-ranked pages shared the exact same "days since last update" value (104 days) &mdash; unlikely to be a real coincidence, more likely a placeholder or collection quirk. Staleness-based conclusions should be treated with added caution.</li>
+      <li><strong class="term">Limited tracking coverage.</strong> Only about 6.3% of rows in the warehouse dataset had GA4 session tracking available. Any "zero" values in session-based fields may reflect missing tracking, not genuinely zero activity.</li>
+      <li><strong class="term">Observational, not causal.</strong> This work cannot claim that refreshing a flagged page will cause its performance to improve &mdash; that would require an actual controlled experiment, which this data does not provide.</li>
+    </ol>
+  </section>
+
+  <!-- 6. RECOMMENDATIONS -->
+  <section class="block fade-up" id="recommendations">
+    <div class="eyebrow"><span class="num">06</span><h2>Ranked Recommendations — Action Playbook</h2></div>
+
+    <p><strong class="term">Archetype &rarr; action mapping:</strong></p>
+    <div class="action-map">
+      <div class="action-row"><span class="code">ctr_and_stale</span><span class="arrow2">&rarr;</span><span class="act">high_priority_review</span></div>
+      <div class="action-row"><span class="code">ctr_below_tier_average</span><span class="arrow2">&rarr;</span><span class="act">review_title_meta</span></div>
+      <div class="action-row"><span class="code">stale_content</span><span class="arrow2">&rarr;</span><span class="act">review_content_refresh</span></div>
+      <div class="action-row"><span class="code">no_flag</span><span class="arrow2">&rarr;</span><span class="act">monitor</span></div>
+    </div>
+
+    <div class="metric-strip">
+      <div class="metric"><div class="val">7,016</div><div class="lbl">high priority review</div></div>
+      <div class="metric"><div class="val">15,712</div><div class="lbl">title/meta review</div></div>
+      <div class="metric"><div class="val">2,329</div><div class="lbl">content refresh</div></div>
+    </div>
+
+    <p><strong class="term">Intended use.</strong> This ranked list helps a content reviewer decide which pages to look at first &mdash; it suggests and ranks, but never decides or acts on its own.</p>
+
+    <div class="callout">
+      <span class="callout-label">Human review required</span>
+      Every flagged page needs human review before action, with extra caution for: pages under 300 <code>impressions_90d</code> (about 39% of all flagged pages, where the numbers can be noise), and pages where missing GA4 tracking may be mistaken for genuinely low activity.
+    </div>
+
+    <div class="callout no-go">
+      <span class="callout-label">This system should never be used to</span>
+      <ul style="margin-bottom:0;">
+        <li>Automatically publish, delete, or edit a page without human review.</li>
+        <li>Claim that refreshing a page <em>will</em> cause recovery &mdash; that requires a controlled experiment.</li>
+        <li>Treat any single flagged page as a certain, confirmed problem.</li>
+      </ul>
+    </div>
+
+    <p><strong class="term">Monitoring &amp; retrain triggers.</strong> (1) Re-check Precision@50 periodically &mdash; retrain if it falls below ~0.50; (2) repeat the leakage audit whenever new features are added; (3) recheck GA4 tracking coverage for drift over time.</p>
+  </section>
+
+  <!-- 7. REPRODUCIBILITY -->
+  <section class="block fade-up" id="reproducibility">
+    <div class="eyebrow"><span class="num">07</span><h2>Reproducibility</h2></div>
+    <p>All code, notebooks, and data referenced in this paper are available in the project repository.</p>
+    <div class="repo-block">
+      <a href="https://github.com/darksider747/flyrank-1st" target="_blank" rel="noopener">github.com/darksider747/flyrank-1st</a>
+    </div>
+    <p>The full working history lives under <code>work/notebooks/</code>, in order: <code>w01_research_question.ipynb</code> through <code>w07_action_playbook.ipynb</code>, and <code>capstone.ipynb</code> (this paper's source notebook).</p>
+    <p>Supporting metrics (JSON) and figures referenced above are committed in <code>work/outputs/</code> and <code>work/figures/</code>. The ranked-queue CSVs themselves are intentionally not committed &mdash; they regenerate automatically each time the relevant notebook runs, to avoid checking in raw data files.</p>
+  </section>
+
+  <!-- 8. ACKNOWLEDGMENTS -->
+  <section class="block fade-up" id="acknowledgments" style="border-bottom:none; padding-bottom:0;">
+    <div class="eyebrow"><span class="num">08</span><h2>Acknowledgments &amp; Data Credit</h2></div>
+    <div class="cred-box">
+      <p style="margin-bottom:10px;">Built on the FlyRank ML Internship dataset &mdash; <a href="https://flyrank.ai" target="_blank" rel="noopener">flyrank.ai</a></p>
+      <p style="margin-bottom:0;">Thank you to the FlyRank team for providing this internship and dataset, and for creating a training program that emphasized honest validation and critical self-review over chasing impressive-looking numbers.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>This paper is decision-support material from an educational internship project, not a production system. Claims throughout are observed, measured, and directional &mdash; not causal proof.</p>
+</footer>
+
+</body>
+</html>
