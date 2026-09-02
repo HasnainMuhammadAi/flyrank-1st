@@ -405,6 +405,7 @@
     <div class="eyebrow"><span class="num">01</span><h2>Introduction &amp; Problem Statement</h2></div>
     <p><strong class="term">Research question:</strong> to predict which pages are not performing well, and arrange them in order from worst performance first to best.</p>
     <p><strong class="term">Decision this supports:</strong> an SEO/content manager who oversees a client's website and can't manually check every page uses this ranked list to identify the worst-performing pages first, then works on improving those pages.</p>
+    <p>FlyRank's own live product already tackles a version of this problem: it computes built-in scores like <code>health_score</code> and specific flags like <code>needs_ctr_fix</code> to help decide which pages need attention. This project does not use those existing scores &mdash; it builds an independent, from-scratch approach (a transparent hand-written rule, compared against a trained model) to the same real underlying problem, testing honestly rather than assuming any existing system is already correct.</p>
     <p><strong class="term">Cost of getting it wrong:</strong> this system can fail in two directions. Flagging a fine page wastes the manager's limited review time &mdash; inconvenient, but recoverable. Missing a genuinely declining page is more serious, since the client's real traffic keeps dropping silently until someone eventually notices &mdash; directly affecting the client's business, not just the reviewer's time.</p>
   </section>
 
